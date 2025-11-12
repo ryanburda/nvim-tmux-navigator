@@ -4,6 +4,8 @@ Seamlessly navigate and resize between Neovim and tmux panes using a unified int
 This plugin allows you to move between Neovim splits and tmux panes with the same keybindings,
 and intelligently resize panes whether they're in Neovim or tmux.
 
+![](./docs/nvim-tmux-navigator.gif)
+
 ## Features
 
 - Navigate between Neovim splits and tmux panes with consistent keybindings
@@ -84,7 +86,7 @@ navigate back out to tmux panes from within Neovim.
 Add this configuration to your `~/.tmux.conf`:
 
 **NOTE -** this assumes you are using the recommended keymaps above. Please modify as needed.
-```
+```sh
 is_vim="ps -o tty= -o state= -o comm= | grep -iqE '^#{s|/dev/||:pane_tty} +[^TXZ ]+ +(\\S+\\/)?g?(view|l?n?vim?x?|fzf)(diff)?$'"
 bind-key -n 'C-h' if-shell "$is_vim" 'send-keys C-h' 'select-pane -L'
 bind-key -n 'C-j' if-shell "$is_vim" 'send-keys C-j' 'select-pane -D'
