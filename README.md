@@ -6,14 +6,16 @@ between Neovim and tmux as if they were a single, unified window manager.
 
 ![](./docs/nvim-tmux-navigator.gif)
 
-## Features
+## Navigation
 
-- Navigate between Neovim splits and tmux panes with consistent keybindings
-- Resize Neovim splits and tmux panes using the same interface
-- Automatically detects whether to move/resize within Neovim or tmux
-- Simple Lua API and user commands
+Navigation works seamlessly across Neovim and tmux boundaries. When you press a
+navigation key (default: `<C-h>`, `<C-j>`, `<C-k>`, `<C-l>`), the plugin first
+attempts to move to an adjacent Neovim split. If there's no split in that direction,
+it automatically moves to the adjacent tmux pane instead. This creates a fluid
+navigation experience where you never have to think about whether you're navigating
+within Neovim or between tmux panes.
 
-## Resizing Behavior
+## Resizing
 
 This plugin implements an intuitive resizing experience that differs from stock Neovim and tmux behavior.
 
