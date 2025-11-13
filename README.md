@@ -1,6 +1,8 @@
 # nvim-tmux-navigator
 
-Seamlessly navigate between Neovim and tmux panes using a unified interface.
+A Neovim plugin that makes Neovim splits and tmux panes indistinguishable from
+a navigation and resizing perspective. Navigate and resize across the boundary
+between Neovim and tmux as if they were a single, unified window manager.
 
 ![](./docs/nvim-tmux-navigator.gif)
 
@@ -10,6 +12,75 @@ Seamlessly navigate between Neovim and tmux panes using a unified interface.
 - Resize Neovim splits and tmux panes using the same interface
 - Automatically detects whether to move/resize within Neovim or tmux
 - Simple Lua API and user commands
+
+## Resizing Behavior
+
+This plugin implements an intuitive resizing experience that differs from stock Neovim and tmux behavior.
+
+### How It Works
+
+The resize implementation **prioritizes making splits bigger**. Think of it as standing inside your
+current pane and pushing the border in the specified direction outward to expand the current split.
+
+When you resize:
+1. **First priority**: The current split tries to grow by taking space from a neighbor in the direction you specify
+2. **Fallback**: If you hit the edge of the container (terminal window), the split will shrink from the opposite direction instead
+3. **Smart boundaries**: A Neovim split will never resize a tmux pane if there's another Neovim split it can take space from.
+### Example
+
+If you have splits arranged like this:
+```
+┌─────┬─────┐
+│  A  │  B  │
+├─────┼─────┤
+│  C  │  D  │ ← You are here
+└─────┴─────┘
+```
+
+When you press `<A-k>` (resize up) from split D:
+- Split D will grow upward, taking space from split B
+- The border between B and D moves up, making D larger
+
+When you press `<A-j>` (resize down) from split D:
+- Split D will shrink downward, giving more room to split B
+- The border between B and D moves down, making D smaller
+
+When you press `<A-h>` (resize left) from split D:
+- Split D will grow to the left, taking space from split C
+- The border between D and C moves to the left, making D larger
+
+When you press `<A-l>` (resize right) from split D:
+- Split D will shrink to the right, giving more room to split C
+- The border between D and C moves to the right, making D smaller
+
+In a more complicated case:
+```
+┌───────┐
+│   A   │  
+├───────┤
+│   B   │ ← You are here
+├───────┤
+│   C   │
+└───────┘
+```
+
+Split B is does not touch the either the top or bottom of the terminal window.
+
+When you press `<A-k>` (resize up) from split B:
+- Split B will grow upward, taking space from split A
+- The border between B and A moves up, making B larger
+
+When you press `<A-j>` (resize down) from split B:
+- Split B will grow downward, taking space from split C
+- The border between B and C moves down, making B larger
+
+Notice that in this case, both resizing up and down made split B larger (unlike
+in the first example where one direction grew and the other shrank). This is what
+we mean by **prioritizing making splits bigger** - the plugin always attempts to
+grow your current split first, regardless of direction.
+
+This creates a more intuitive resizing experience where your action directly
+corresponds to growing your current workspace in the direction you specify.
 
 ## Installation
 
