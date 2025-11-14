@@ -1,10 +1,8 @@
 # nvim-tmux-wm
 
-A set of window management keymaps that makes Neovim splits and tmux
-panes indistinguishable from a navigation and resizing perspective.
+A unified window manager for Neovim and tmux.
 
-Navigate and resize across the boundary between Neovim and tmux
-as if they were a single, unified window manager.
+Navigate and resize seamlessly across Neovim splits and tmux panes as if they were a single application.
 
 ![](./docs/nvim-tmux-wm.gif)
 
