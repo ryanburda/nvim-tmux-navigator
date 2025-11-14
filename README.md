@@ -1,8 +1,10 @@
 # nvim-tmux-wm
 
-A Neovim plugin that makes Neovim splits and tmux panes indistinguishable from
-a navigation and resizing perspective. Navigate and resize across the boundary
-between Neovim and tmux as if they were a single, unified window manager.
+A set of window management keymaps that makes Neovim splits and tmux
+panes indistinguishable from a navigation and resizing perspective.
+
+Navigate and resize across the boundary between Neovim and tmux
+as if they were a single, unified window manager.
 
 ![](./docs/nvim-tmux-wm.gif)
 
@@ -23,21 +25,21 @@ moving within Neovim or between tmux panes.
 
 This plugin implements an intuitive split resizing experience that differs from stock Neovim and tmux behavior.
 The default resizing keys are:
-- `<A-h>` grow left
-- `<A-j>` grow down
-- `<A-k>` grow up
-- `<A-l>` grow right
+- `<A-h>` resize left
+- `<A-j>` resize down
+- `<A-k>` resize up
+- `<A-l>` resize right
 
 ### How It Works
 
-The resize implementation **prioritizes making splits bigger**. Think of it as standing inside your
-current pane and pushing the border in the specified direction outward to expand the current split.
-A split will attempt to grow in the specified direction unless it is up against the outermost terminal window,
-in which case it will shrink from the opposite direction.
+The resize implementation **prioritizes making splits bigger by expanding in a direction**. Think of
+it as standing inside your current pane and pushing the border in the specified direction outward to
+expand the current split. A split will attempt to grow in the specified direction unless it is up
+against the outermost terminal window, in which case it will shrink from the opposite direction.
 
 When you resize:
 1. **First priority**: The current split tries to grow by taking space from a neighbor in the direction you specify
-2. **Fallback**: If you hit the edge of the container (terminal window), the split will shrink from the opposite direction instead
+2. **Fallback**: If direction specified is already touching the edge of the container (terminal window), the split will shrink from the opposite direction instead
 3. **Smart boundaries**: A Neovim split will never resize a tmux pane if there's another Neovim split it can take space from.
 ### Example
 
@@ -57,6 +59,9 @@ When you press `<A-k>` (resize up) from split D:
 When you press `<A-j>` (resize down) from split D:
 - Split D will shrink downward, giving more room to split B
 - The border between B and D moves down, making D smaller
+- This occurs because the bottom border of D is already touching
+the bottom border of the entire window and thus cannot go down
+any further
 
 When you press `<A-h>` (resize left) from split D:
 - Split D will grow to the left, taking space from split C
@@ -65,16 +70,20 @@ When you press `<A-h>` (resize left) from split D:
 When you press `<A-l>` (resize right) from split D:
 - Split D will shrink to the right, giving more room to split C
 - The border between D and C moves to the right, making D smaller
+- This occurs because the right border of D is already touching
+the right border of the entire window and thus cannot go to the
+right any further
+
 
 In a more complicated case:
 ```
-┌───────┐
-│   A   │  
-├───────┤
-│   B   │ ← You are here
-├───────┤
-│   C   │
-└───────┘
+┌─────────────┐
+│      A      │
+├─────────────┤
+│      B      │ ← You are here
+├─────────────┤
+│      C      │
+└─────────────┘
 ```
 
 Split B is does not touch the either the top or bottom of the terminal window.
@@ -98,12 +107,13 @@ corresponds to growing your current workspace in the direction you specify.
 
 # Configuration
 
-Unlike most Neovim plugins, `nvim-tmux-wm` requires configuration in both
-Neovim and Tmux. In a way, this is as much a tmux plugin as it is a Neovim plugin.
+`nvim-tmux-wm` is both a neovim plugin and a tmux plugin. As a result
+we'll need to configure both ends in order to get things working.
 
 **Why configure both Neovim and Tmux?**
 
-This plugin requires configuration in both tmux and Neovim because they handle keybindings separately:
+This plugin requires configuration in both tmux and Neovim because they each
+handle keybindings separately and our goal is to provide a unified experience:
 
 - **Tmux side**: Tmux intercepts all keypresses first. The tmux configuration detects if the active pane
 is running Neovim, and if so, passes the keypress through to Neovim. Otherwise, tmux handles the
@@ -163,15 +173,25 @@ vim.keymap.set('n', '<A-l>', '<cmd>NvimTmuxResizeRight<cr>')
 
 ## Tmux Setup
 
+The tmux configuration needs to know where to find the [resize script](./scripts/resize_tmux_pane.sh)
+that implements the resizing logic. This script is bundled with the Neovim plugin (rather than being
+copy-pasted into your tmux config) to ensure both Neovim and tmux use identical, version-controlled
+resize behavior. This ensures the window manager experience is kept consistent with future releases.
+
+After installing the plugin with your Neovim package manager, update the `NVIM_TMUX_RESIZE_SCRIPT`
+path in the configuration below to point to where the plugin was installed.
+
 Add this configuration to your `~/.tmux.conf`:
-
-**NOTE -** this assumes you are using the recommended keymaps above. Please modify as needed.
-
-**NOTE -** `NVIM_TMUX_RESIZE_SCRIPT` path must be updated to be the location where this plugin was installed.
 ```sh
-########################
-# Nvim Tmux Navigation #
-########################
+################
+# nvim-tmux-wm #
+################
+# NOTE: Update the path to match where you cloned this plugin (This should work for lazy.nvim)
+#         |
+#         |
+#         V
+NVIM_TMUX_RESIZE_SCRIPT="$HOME/.local/share/nvim/lazy/nvim-tmux-wm/scripts/resize_tmux_pane.sh"
+
 is_vim="ps -o tty= -o state= -o comm= | grep -iqE '^#{s|/dev/||:pane_tty} +[^TXZ ]+ +(\\S+\\/)?g?(view|l?n?vim?x?|fzf)(diff)?$'"
 
 # Navigation bindings
@@ -181,9 +201,6 @@ bind-key -n 'C-k' if-shell "$is_vim" 'send-keys C-k' 'select-pane -U'
 bind-key -n 'C-l' if-shell "$is_vim" 'send-keys C-l' 'select-pane -R'
 
 # Resize bindings
-# NOTE: Update the path to match where you cloned this plugin (This should work for lazy.nvim)
-NVIM_TMUX_RESIZE_SCRIPT="$HOME/.local/share/nvim/lazy/nvim-tmux-wm/scripts/resize_tmux_pane.sh"
-
 bind-key -n 'M-h' if-shell "$is_vim" 'send-keys M-h' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT L 3'"
 bind-key -n 'M-j' if-shell "$is_vim" 'send-keys M-j' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT D 1'"
 bind-key -n 'M-k' if-shell "$is_vim" 'send-keys M-k' "run-shell -b '$NVIM_TMUX_RESIZE_SCRIPT U 1'"
@@ -199,15 +216,18 @@ bind-key -T copy-mode-vi 'C-h' select-pane -L
 bind-key -T copy-mode-vi 'C-j' select-pane -D
 bind-key -T copy-mode-vi 'C-k' select-pane -U
 bind-key -T copy-mode-vi 'C-l' select-pane -R
-############################
-# End Nvim Tmux Navigation #
-############################
+####################
+# end nvim-tmux-wm #
+####################
 ```
 
 ## Usage
 
-This plugin is really only effective when used with keymaps. Since tmux sends keys to Neovim it is rare that
-you will actually use the navigation or resize commands directly.
+After following the steps above, restart Neovim and tmux for the changes to take effect.
+
+This plugin is best experienced through keymaps that unify the experience between Neovim and tmux.
+Since tmux sends keys to Neovim it is rare that you will actually use the Neovim specific
+navigation or resize commands directly.
 
 ### User Commands
 
