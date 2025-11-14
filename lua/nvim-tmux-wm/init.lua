@@ -15,16 +15,18 @@ local nvim_to_tmux_direction_map = {
 }
 
 T.move = function(direction)
-  local original_nvim_winnr = vim.fn.winnr()
+  local current_winnr = vim.fn.winnr()
+  local direction_winnr = vim.fn.winnr(direction)
 
-  -- Try to move in the specified direction
-  vim.cmd(string.format('wincmd %s', direction))
-
-  -- Move tmux split if there wasn't a nvim split in that direction
-  if vim.fn.winnr() == original_nvim_winnr then
+  if current_winnr ~= direction_winnr then
+    -- Move to the nvim window in the specified direction
+    vim.cmd('wincmd ' .. direction)
+  else
+    -- No nvim window to move to, move in tmux instead
     local handle = io.popen(string.format('tmux select-pane -%s 2>/dev/null', nvim_to_tmux_direction_map[direction]))
-    local result = handle:read("*a")
-    handle:close()
+    if handle then
+      handle:close()
+    end
   end
 end
 
