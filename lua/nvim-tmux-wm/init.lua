@@ -64,7 +64,6 @@ T.resize = function(direction, amount)
   if current_winnr == direction_winnr and current_winnr == opposite_direction_winnr then
     -- Resize the tmux pane if there isn't a nvim split on either side of the current split.
     -- Get the path to the resize script
-    -- TODO: fix how tmux resizing is called.
     local script_path = debug.getinfo(1, "S").source:sub(2):match("(.*/)") .. "../../scripts/resize_tmux_pane.sh"
     os.execute(string.format("tmux run-shell -b '%s %s %d' 2>/dev/null", script_path, nvim_to_tmux_direction_map[direction], amount))
   elseif current_winnr ~= direction_winnr and current_winnr == opposite_direction_winnr then
